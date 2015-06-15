@@ -142,9 +142,11 @@ exports.Tag = (node) ->
   str += '/' if node.selfClosing
   return str
 
-exports.Text = (text, options) ->
+exports.Text = (text, options, lnDiff) ->
   val = text.val
-  if val.length and not options.noPrefix and val isnt '\n' and not text.isHtml
+  if lnDiff is 0
+    " #{val}"
+  else if val.length and not options.noPrefix and val isnt '\n' and not text.isHtml
     "| #{val}"
   else
     val
