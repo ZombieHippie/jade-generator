@@ -8,22 +8,21 @@ indent = (options, indentLevel = 0) ->
   space = spaces(options.spaces)
   _.repeat(space, Math.max(indentLevel - 1, 0))
 
-NO_PREFIX = {noPrefix: true}
+countNewlines = (str) -> str.split("\n").length - 1
 
+NO_PREFIX = {noPrefix: true}
+PARENT_IS_BLOCK = {parentIsBlock: true}
+
+# lnDiff is the amount of newlines that should appear before the token
 serializeNode = (node, options, lnDiff, indentLevel) ->
   serializer = serializers[node.type]
   if serializer?
     serialized = serializer(node, options, lnDiff)
-    if serialized.length and serialized isnt '\n'
-      newLines = lnDiff
-      if newLines-- > 0 # lnDiff is greater than 0
-        serialized = '\n' + indent(options, indentLevel) + serialized
-      while newLines-- > 0
-        serialized = '\n' + serialized
-    do ->
-      lnCount = serialized.split("\n").length - 1
-      if lnCount isnt lnDiff
-        throw "serialized error on lnDiff, expected: #{lnDiff} lns, got: #{lnCount} lns."
+    #if serialized.length and serialized isnt '\n'
+    if lnDiff-- > 0 # lnDiff is greater than 0
+      serialized = '\n' + indent(options, indentLevel) + serialized
+    while lnDiff-- > 0
+      serialized = '\n' + serialized
     return serialized
   else
     throw new Error("unexpected token '#{node.type}'")
@@ -36,7 +35,7 @@ serializeAST = (ast, options, prevLine = 1, indentLevel = 0) ->
   currLine = ast.line or prevLine
   result = do ->
     lnDiff = currLine - prevLine
-    console.log currLine, prevLine, lnDiff, ast.type
+    console.log currLine, prevLine, lnDiff, ast.type, ast.name, ast.val
     serializeNode(ast, options, lnDiff, indentLevel)
 
   addASTResult = ({ln, str}) ->

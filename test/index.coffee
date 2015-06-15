@@ -15,7 +15,7 @@ writeFile = (f, content) -> fs.writeFileSync(dirfile(f), content, 'utf8')
 
 cases = _.filter fs.readdirSync(casesPath), (testCase) ->
   not /\.generated/.test(testCase) and
-  /\.jade$/.test(testCase) and
+  /^text\.jade$/.test(testCase) and
   # TODO: support inline-tag
   testCase isnt 'inline-tag.jade'
 
@@ -25,15 +25,16 @@ stripUnsupportedProperties = (ast = {}) ->
       ast[key] = stripUnsupportedProperties(val)
     else if _.isArray(val)
       ast[key] = _.map val, stripUnsupportedProperties
-  _.omit(ast, 'line', 'selfClosing')
+  ast #_.omit(ast, 'line', 'selfClosing')
 
 describe 'cases', ->
   _.each cases, (testCase, i) ->
     describe "#{i}. #{testCase}:", ->
       it "resulting source should have the same ast as the original", ->
         ast = parse(lex(readFile(testCase), testCase))
+        writeFile(testCase.replace('.jade', '.json'), JSON.stringify(ast, null, 2))
         result = lib(ast)
         writeFile(testCase.replace('.jade', '.generated.jade'), result)
         newAst = parse(lex(result, testCase))
-
-        assert.deepEqual stripUnsupportedProperties(ast), stripUnsupportedProperties(newAst)
+        writeFile(testCase.replace('.jade', '.generated.json'), JSON.stringify(newAst, null, 2))
+        assert.deepEqual stripUnsupportedProperties(newAst), stripUnsupportedProperties(ast)

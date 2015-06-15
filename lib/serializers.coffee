@@ -144,11 +144,11 @@ exports.Tag = (node) ->
 
 exports.Text = (text, options, lnDiff) ->
   val = text.val
-  if lnDiff is 0
-    " #{val}"
-  else if val.length and not options.noPrefix and val isnt '\n' and not text.isHtml
-    "| #{val}"
-  else
-    val
+  if not options.noPrefix
+    if lnDiff is 0 and not options.parentIsBlock
+      return " #{val}"
+    else if val.length and val isnt '\n' and not text.isHtml
+      return "| #{val}"
+  return val
 
 exports.When = (node) -> "when #{node.expr}"
